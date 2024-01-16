@@ -23,55 +23,46 @@ import compute_neighbors
 #     'flexiblity': [2, 10, 25, 50],
 #     'dispatch': ['start', 'spread']
 # }
-constraints = {
-    'secs': [262],
-    'tps': [20000],
-    'evs': [10.0],
-    'sys_energy': [10.0],
-    'flexiblity': [ 0.1],
-}
-
 # constraints = {
-#     'secs': [16],
-#     'tps': [300],
-#     'evs': [1.0],
-#     'sys_energy': [6.0],
-#     'flexiblity': [10],
-#     'dispatch': ['start']
+#     'secs': [262],
+#     'tps': [20000],
+#     'evs': [10.0],
+#     'sys_energy': [10.0],
+#     'flexiblity': [ 0.1],
 # }
+
+constraints = {
+    'secs': [16],
+    'tps': [300],
+    'evs': [1.0],
+    'sys_energy': [6.0],
+    'flexiblity': [10],
+    'dispatch': ['start']
+}
 
 raw_petitions = []
 
-def writeToFile(time_horizon, grid_size, secs, evs, passengers, petitions, energy_required,
-                flexiblity, sys_energy, dispatch_mode, ev_factor, total_evs, instance_level_energy_produced,
-                connections, neighbors):
+def writeToFile(time_horizon, grid_size, secs, cs, evs, passengers, petitions, energy_required,
+                flexiblity, sys_energy, dispatch_mode, ev_factor, total_evs, instance_level_energy_produced):
     # outfile ="./instances/"+file_type+"/"+str(file_num)+".txt"
     # output_folder = './instances/evaluation_spread_mode/'+str(flexiblity)+'_FLEX_'+str(sys_energy)+'_SYS_ENERGY/'
     outfile = './instances/'+str(dispatch_mode)+'_'+str(len(secs))+'_SEC_'+str(sys_energy)+'_ENERGY_'+\
                     str(ev_factor)+'_EV-FACTOR_'+str(len(evs))+'_EV_'+\
-              str(flexiblity)+'_FLEX_'+str(len(petitions))+"_TPS_"+str(connections)+"_CONNECTIONS.txt"
-
-    # excelfile = './analysis/'+str(dispatch_mode)+'_'+str(len(secs))+'_SEC_'+str(sys_energy)+'_ENERGY_'+\
-    #                 str(ev_factor)+'_EV-FACTOR_'+str(len(evs))+'_EV_'+\
-    #           str(flexiblity)+'_FLEX_'+str(len(petitions))+"_TPS_"+str(connections)+"_CONNECTIONS.xlsx"
-
+              str(flexiblity)+'_FLEX_'+str(len(petitions))+".txt"
     outstream = codecs.open(outfile, "w", encoding="utf-8")
     outstream.write(str(grid_size)+" "+str(grid_size)+" "+str(time_horizon)+"\n")
     outstream.write(str(len(secs))+"\n")
     energy_produced = 0
     analysis_data = pd.DataFrame(columns=['Petitions', 'Distance', 'Total Energy Produced', 'Total Energy Required'])
     for sec in secs:
-        sec_str = str(sec.sec_id)+" "+str(sec.x_start)+" "+str(sec.y_start)+"\n"
+        sec_str = str(sec.sec_id)+" "+str(sec.x_start)+" "+str(sec.y_start)+" "+str(int(sec.total_energy[0]))+"\n"
         energy_produced += sec.total_energy
         outstream.write(sec_str)
 
-    # Connections Here
-    outstream.write(str(connections)+"\n")
-    for sec_id in neighbors.keys():
-        for connection in neighbors[sec_id]:
-            connection_str = str(sec_id)+" "+str(connection)+"\n"
-            outstream.write(connection_str)
-
+    outstream.write(str(len(cs))+"\n")
+    for c in cs:
+        cs_str = str(c.cs_id)+" "+str(c.sec_id)+" "+str(c.x_loc)+" "+str(c.y_loc)+" "+str(c.q_lim)+" "+str(c.charge_per_unit)+"\n"
+        outstream.write(cs_str)
 
     outstream.write(str(len(evs))+"\n")
     for ev in evs:
@@ -90,13 +81,11 @@ def writeToFile(time_horizon, grid_size, secs, evs, passengers, petitions, energ
         p_str = str(petition.petition_id)+ " " +str(sec_id+1)+" "+str(allocation_status)+"\n"+str(int(petition.time))+" "+\
                 str(petition.pickup_x)+ " " +str(petition.pickup_y)+ " " + \
                 str(petition.drop_x) + " " +str(petition.drop_y)+" "+str(petition.early_start)+" "+ \
-                str(petition.late_start) + " " +str(petition.early_finish)+" "+str(petition.late_finish)+"\n"
+                str(petition.late_start) + " " +str(petition.early_finish)+" "+str(petition.late_finish)+str(petition.travel_time)+"\n"
         row = [petition.petition_id, (petition.early_finish-petition.early_start),
                instance_level_energy_produced[0], energy_required]
         analysis_data.loc[len(analysis_data)] = row
         outstream.write(p_str)
-
-    # analysis_data.to_excel(excelfile, index=False)
 
 
 def calculateManhattanDistance(pickup_x, pickup_y, drop_x, drop_y):
@@ -106,12 +95,8 @@ def calculateManhattanDistance(pickup_x, pickup_y, drop_x, drop_y):
 def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
                       trip_rate, num_passengers, sys_energy, flexiblity,
                                block_size, distances, mode, ev_factor, total_evs):
-    # print('Generating '+str(mode)+'_'+str(num_sec)+'_SEC_'+str(sys_energy)+'_ENERGY_'+\
-    #                 str(ev_factor)+'_EV-FACTOR_'+str(total_evs)+'_EV_'+\
-    #       str(flexiblity)+'_FLEX_'+str(num_passengers)+"_TPS_"+str(connections)+"_CONNECTIONS.txt")
-    # NYC Connections
-    connections = [261, 600, 1600]
     secs = []
+    cs = []
     evs = []
     passengers = []
     petitions = []
@@ -121,10 +106,9 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
     energy_required = 0
     pick_up_x, pick_up_y, drop_x, drop_y = 0, 0, 0, 0
     time = 0
-    communities, neighbors = compute_neighbors.divide_and_compute_neighbors(grid_size, num_sec, connections[0])
+    communities, neighbors = compute_neighbors.divide_and_compute_neighbors(grid_size, num_sec, 1)
     num_sec = len(communities)
     print('Communities: ',communities)
-    print('Neighbors: ',neighbors)
 
     for i in range(num_passengers):
         p_id = i + 1
@@ -151,7 +135,7 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
         if late_finish > time_horizon:
             time_horizon = late_finish
         passengers.append(modal.Passenger(p_id, sec_id))
-        petitions.append(modal.Trip_petition(petition_id, p_id, time,
+        petitions.append(modal.Trip_petition(petition_id, sec_id, time,
                                              pickup_x, pickup_y, drop_x,
                                              drop_y, early_start,
                                              early_finish, late_start,
@@ -161,8 +145,11 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
 
     for i in range(num_sec):
         sec_id = i + 1
+        cs_id = sec_id
         x_start = communities[i][0][0]
         y_start = communities[i][0][1]
+        cs_x = x_start
+        cs_y = y_start
         x_end = communities[i][1][0]
         y_end = communities[i][1][0]
         charge = 0
@@ -174,6 +161,9 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
             total_energy_produced += item
         secs.append(modal.Sec(sec_id, 1, x_start, y_start,
                               x_end, y_end, charge, total_energy_produced))
+        q_limit = 4
+        charge_per_unit = 2
+        cs.append(modal.ChargingStation(cs_id, sec_id, cs_x, cs_y, q_limit, charge_per_unit))
         instance_level_energy_produced += total_energy_produced
 
         for j in range(num_ev[i]):
@@ -207,11 +197,8 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
                                 capacity, charge_per_block, release_time))
             total_ev += 1
 
-    for connection in connections:
-        communities, neighbors = compute_neighbors.divide_and_compute_neighbors(grid_size, num_sec, connection)
-        writeToFile(time_horizon, grid_size, secs, evs, passengers, petitions,energy_required,
-                    flexiblity, sys_energy, mode, ev_factor, total_evs, instance_level_energy_produced,connection,
-                    neighbors)
+    writeToFile(time_horizon, grid_size, secs, cs, evs, passengers, petitions,energy_required,
+                flexiblity, sys_energy, mode, ev_factor, total_evs, instance_level_energy_produced)
 
 
 def parseRealData(mode):

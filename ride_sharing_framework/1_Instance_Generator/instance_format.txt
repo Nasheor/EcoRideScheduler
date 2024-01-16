@@ -6,16 +6,21 @@
 
 (02) SECs information.
     - First line. Num_SECs. Integer. Number of SECs in the city.
-    - Next Num_SECs lines contain tuple(A, B, C), where:
+    - Next Num_SECs lines contain tuple(A, B, C, D), where:
     * A. Integer. SEC_id
     * B. Integer. SEC_x_location
     * C. Integer. SEC_y_location
+    * D. Integer. Energy Produced
 
-(03) SECs Neighbor information.
-    - First line. Total_Num_Connections. Integer. Number of Connections in the city.
-    - Next Total_Num_Connections lines contain tuple(A, B), where:
-    * A. Integer. SEC_id
-    * B. Integer. NEIGHBOR_SEC_ID
+(03) Charging Station Information
+    - First line. Num_CSs. Integer. Number of Charging Stations in the city.
+    - Next Num_Css lines contain tuple(A, B, C, D, E, F), where:
+    * A. Integer. CS_id
+    * B. Integer. SEC_id
+    * C. Integer. CS_x_location
+    * D. Integer. CS_y_location
+    * E. Integer. Queue Limit
+    * F. Integer. Charging released per unit time
 
 (04) EVs information.
     - First line. Num_EVs. Integer. Number of EVs in the city.
@@ -61,4 +66,5 @@
            (06) LP. Integer => Time of the late pick-up of the trip petition.
            (07) ED. Integer => Time of the early drop-off of the trip petition.
            (08) UB. Integer => Time of the late drop-off of the trip petition.
+           (09) TW. Integer => Weight of the trip petition.
 

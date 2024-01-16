@@ -46,3 +46,12 @@ class Trip_petition(object):
     late_start: int
     late_finish: int
     travel_time: int
+
+@dataclass
+class ChargingStation(object):
+    cs_id: int
+    sec_id: int
+    x_loc: int
+    y_loc: int
+    q_lim: int
+    charge_per_unit: int
