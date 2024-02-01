@@ -1,3 +1,4 @@
+import random
 import sys
 import random as r
 import modal
@@ -31,10 +32,19 @@ import compute_neighbors
 #     'flexiblity': [ 0.1],
 # }
 
+# constraints = {
+#     'secs': [16],
+#     'tps': [300],
+#     'evs': [1.0],
+#     'sys_energy': [6.0],
+#     'flexiblity': [10],
+#     'dispatch': ['start']
+# }
+
 constraints = {
-    'secs': [16],
-    'tps': [300],
-    'evs': [1.0],
+    'secs': [3],
+    'tps': [15],
+    'evs': [2.0],
     'sys_energy': [6.0],
     'flexiblity': [10],
     'dispatch': ['start']
@@ -81,7 +91,7 @@ def writeToFile(time_horizon, grid_size, secs, cs, evs, passengers, petitions, e
         p_str = str(petition.petition_id)+ " " +str(sec_id+1)+" "+str(allocation_status)+"\n"+str(int(petition.time))+" "+\
                 str(petition.pickup_x)+ " " +str(petition.pickup_y)+ " " + \
                 str(petition.drop_x) + " " +str(petition.drop_y)+" "+str(petition.early_start)+" "+ \
-                str(petition.late_start) + " " +str(petition.early_finish)+" "+str(petition.late_finish)+str(petition.travel_time)+"\n"
+                str(petition.late_start) + " " +str(petition.early_finish)+" "+str(petition.late_finish)+" "+str(petition.travel_time)+"\n"
         row = [petition.petition_id, (petition.early_finish-petition.early_start),
                instance_level_energy_produced[0], energy_required]
         analysis_data.loc[len(analysis_data)] = row
@@ -106,7 +116,7 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
     energy_required = 0
     pick_up_x, pick_up_y, drop_x, drop_y = 0, 0, 0, 0
     time = 0
-    communities, neighbors = compute_neighbors.divide_and_compute_neighbors(grid_size, num_sec, 1)
+    communities, neighbors = compute_neighbors.divide_and_compute_neighbors(grid_size, num_sec, 0)
     num_sec = len(communities)
     print('Communities: ',communities)
 
@@ -115,20 +125,25 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
         sec_id = r.randint(0, num_sec-1)
         petition_id = i+1
         time =  int(trip_rate[i])
-        pickup_x = communities[sec_id][0][0]
-        pickup_y =communities[sec_id][0][1]
         distance = int(distances[i])
+        pickup_x = r.randint(0, distance)
+        pickup_y = pickup_x
         tmp_x =  r.randint(0, distance)
         drop_x =  pickup_x + tmp_x
         if drop_x >= grid_size:
             drop_x = pickup_x - tmp_x
-        tmp_y =  r.randint(0, (distance-tmp_x))
-        drop_y = pickup_y + tmp_y
+        # tmp_y =  r.randint(0, (distance-tmp_x))
+        # drop_y = pickup_y + tmp_y
+        drop_y = -1
+        while drop_y < 0:
+            drop_y =  distance + pickup_y   - drop_x + pickup_x
+            if drop_y < 0:
+                pickup_y = r.randint  (0, int(distance/3))
         if drop_y > grid_size:
             drop_y = pickup_y - tmp_y
         travel_time = distance * time_per_block
         energy_required += travel_time
-        early_start = time + int((flexiblity/100) * trip_rate[num_passengers-1])
+        early_start = time + int((flexiblity/100) * trip_rate[num_passengers-1]) + 20
         late_start = early_start + int((flexiblity/100) * trip_rate[num_passengers-1])
         early_finish = early_start + travel_time
         late_finish = late_start + travel_time
@@ -161,7 +176,7 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
             total_energy_produced += item
         secs.append(modal.Sec(sec_id, 1, x_start, y_start,
                               x_end, y_end, charge, total_energy_produced))
-        q_limit = 4
+        q_limit = 1
         charge_per_unit = 2
         cs.append(modal.ChargingStation(cs_id, sec_id, cs_x, cs_y, q_limit, charge_per_unit))
         instance_level_energy_produced += total_energy_produced
@@ -169,7 +184,7 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
         for j in range(num_ev[i]):
             battery_capacity = 100
             ev_id = total_ev
-            capacity = 4
+            capacity = 3
             # Energy requirement for trip petitions is calculated using the metric
             charge_per_block = 1
 
@@ -258,19 +273,20 @@ def parseRealData(mode):
                             diff = datetime.datetime.combine(datetime.date.today(), row['pickup'].time()) - \
                                    datetime.datetime.combine(datetime.date.today(), start_time.time())
                             trip_rate.append(diff.total_seconds() - 3600)
-                            if row['trip_distance'] == 0:
-                                distances.append(4)
-                                total_distance += 4
+                            if row['trip_distance'] < 6:
+                                d = random.randint(6, 50)
+                                distances.append(d)
+                                total_distance += d
                             else:
                                 distances.append(math.ceil(row['trip_distance']))
                                 total_distance += math.ceil(row['trip_distance'])
                         time_horizon = int(trip_rate[num_passengers-1])
                         total_charge_rate = total_distance * ev_factor
-                        battery_capacity = grid_size
+                        battery_capacity = 20
                         num_ev = int(total_charge_rate/battery_capacity)
                         ev_rate = int(num_ev/num_sec)
-                        if ev_rate == 0:
-                            ev_rate = 1
+                        # if ev_rate == 0:
+                        ev_rate = 2
                         evs = {}
                         for i in range(num_sec):
                             evs[i] = ev_rate

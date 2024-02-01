@@ -147,7 +147,7 @@ def parse_in(input_file_name):
             schedule.append(mov_info)
 
             # II.3.3. We enter the third movement
-            mov_info = (end_of_resting_time + 1, end_of_resting_time + 2, x_coord, y_coord, x_coord, y_coord, 0, 0, EV_energy, EV_energy, 0, 0, 0)
+            mov_info = (end_of_resting_time + 1, end_of_resting_time + 5, x_coord, y_coord, x_coord, y_coord, 0, 0, EV_energy, EV_energy, 0, 0, 0)
             schedule.append(mov_info)
 
         # III. We enter the EV in the dictionary

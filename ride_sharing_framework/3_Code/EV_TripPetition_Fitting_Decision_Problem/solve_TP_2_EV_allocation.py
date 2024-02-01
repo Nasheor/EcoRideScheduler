@@ -357,7 +357,7 @@ def ev_action_and_movement_allocation_attempt(my_EV_schedule,
     pass
 
     # 2. We unpack the trip static info
-    (LB, SX, SY, TX, TY, EP, LP, ED, LD) = my_TP_static_info
+    (LB, SX, SY, TX, TY, EP, LP, ED, LD, TW) = my_TP_static_info
 
     # 3. We unpack the EV movement we are considering
     (TA, TB, AX, AY, BX, BY, PS, PE, ES, EE, TL, LW, TD) = my_EV_schedule[movement_index]
@@ -585,7 +585,7 @@ def last_call_case(my_EV_schedule,
     pass
 
     # 2. We unpack the trip static info
-    (LB, SX, SY, TX, TY, EP, LP, ED, LD) = my_TP_static_info
+    (LB, SX, SY, TX, TY, EP, LP, ED, LD, TW) = my_TP_static_info
 
     # 3. We unpack the EV movement we are considering
     (TA, TB, AX, AY, BX, BY, PS, PE, ES, EE, TL, LW, TD) = my_EV_schedule[movement_index]
@@ -661,7 +661,7 @@ def normal_call_case(case_number,
     pass
 
     # 2. We unpack the trip static info
-    (LB, SX, SY, TX, TY, EP, LP, ED, LD) = my_TP_static_info
+    (LB, SX, SY, TX, TY, EP, LP, ED, LD, TW) = my_TP_static_info
 
     # 3. We unpack the EV movement we are considering
     (TA, TB, AX, AY, BX, BY, PS, PE, ES, EE, TL, LW, TD) = my_EV_schedule[movement_index]
@@ -819,7 +819,7 @@ def ev_action_allocation_attempt(my_EV_schedule,
     pass
 
     # 2. We unpack the trip static info
-    (LB, SX, SY, TX, TY, EP, LP, ED, LD) = my_TP_static_info
+    (LB, SX, SY, TX, TY, EP, LP, ED, LD, TW) = my_TP_static_info
 
     # 3. We evaluate the trip action lower and upper bound
 
@@ -827,7 +827,7 @@ def ev_action_allocation_attempt(my_EV_schedule,
     #        from when the trip is announced
     #        until the late pick-up
     if (tp_id > 0):
-        tp_lb = LB
+        tp_lb = EP
         tp_ub = LP
 
     # 3.2. If it is a drop-off action, then the window is

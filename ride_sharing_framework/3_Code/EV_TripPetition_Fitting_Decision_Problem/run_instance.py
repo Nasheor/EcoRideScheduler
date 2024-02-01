@@ -38,7 +38,9 @@ def my_main(input_file_name, output_file_name):
     (city, SECs, CSs, EVs, TPs) = parse_in.parse_in(input_file_name)
 
     # 3. We run the reactive simulation
-    res = solve.solve_reactive_simulation(SECs,
+    res = solve.solve_reactive_simulation(city,
+                                          SECs,
+                                          CSs,
                                           EVs,
                                           TPs
                                          )
