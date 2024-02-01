@@ -118,7 +118,7 @@ def EV_is_available_after_charging(EV, simulation_end_time):
     # The end time of the last movement can be used to determine availability.
     last_movement = EV[-1]  # Assuming EV schedule is the last element in EV data structure
     end_time_of_last_movement = last_movement[1]  # Assuming end time is the second element in the movement tuple
-
+    print("Test")
     # Check if the end time of the last movement (charging) is before the simulation end time
     return end_time_of_last_movement < simulation_end_time
 
