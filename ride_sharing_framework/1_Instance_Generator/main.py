@@ -44,9 +44,9 @@ import compute_neighbors
 constraints = {
     'secs': [3],
     'tps': [15],
-    'evs': [2.0],
+    'evs': [4.0],
     'sys_energy': [6.0],
-    'flexiblity': [10],
+    'flexiblity': [100],
     'dispatch': ['start']
 }
 
@@ -82,6 +82,7 @@ def writeToFile(time_horizon, grid_size, secs, cs, evs, passengers, petitions, e
         outstream.write(ev_str)
 
     outstream.write(str(len(petitions))+"\n")
+
     for petition in petitions:
         sec_id = 0
         for per in passengers:
@@ -143,7 +144,7 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
             drop_y = pickup_y - tmp_y
         travel_time = distance * time_per_block
         energy_required += travel_time
-        early_start = time + int((flexiblity/100) * trip_rate[num_passengers-1]) + 20
+        early_start = time + int((flexiblity/100) * trip_rate[num_passengers-1])
         late_start = early_start + int((flexiblity/100) * trip_rate[num_passengers-1])
         early_finish = early_start + travel_time
         late_finish = late_start + travel_time
@@ -155,6 +156,18 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
                                              drop_y, early_start,
                                              early_finish, late_start,
                                              late_finish, travel_time))
+    # Sort petitions in decreasing order of travel_time
+    petitions.sort(key=lambda x: x.travel_time, reverse=True)
+
+    # Update the time attribute from 1 to n
+    for i, petition in enumerate(petitions, start=1):
+        petition.time = i
+        petition.early_start = i + 1
+        petition.late_start = petition.early_start + int((flexiblity/100) * trip_rate[num_passengers-1]) + 50
+        petition.early_finish = petition.early_start + petition.travel_time
+        petition.late_finish = petition.late_start + petition.travel_time + 50
+        if late_finish > time_horizon:
+            time_horizon = late_finish
     energy_gen_time = time
     instance_level_energy_produced = 0
 
@@ -177,7 +190,7 @@ def assignRealWorldConstraints(time_horizon, grid_size, num_sec, num_ev,
         secs.append(modal.Sec(sec_id, 1, x_start, y_start,
                               x_end, y_end, charge, total_energy_produced))
         q_limit = 1
-        charge_per_unit = 2
+        charge_per_unit = 10
         cs.append(modal.ChargingStation(cs_id, sec_id, cs_x, cs_y, q_limit, charge_per_unit))
         instance_level_energy_produced += total_energy_produced
 
@@ -274,7 +287,7 @@ def parseRealData(mode):
                                    datetime.datetime.combine(datetime.date.today(), start_time.time())
                             trip_rate.append(diff.total_seconds() - 3600)
                             if row['trip_distance'] < 6:
-                                d = random.randint(6, 50)
+                                d = random.randint(6, 20)
                                 distances.append(d)
                                 total_distance += d
                             else:

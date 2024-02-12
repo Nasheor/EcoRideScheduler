@@ -21,51 +21,6 @@
 # ------------------------------------------
 import solve_TP_2_EV_allocation
 
-
-def identify_potential_charging_points(EVs, CSs):
-    charging_points = {}
-    battery_threshold = 30
-    for ev_id, ev_data in EVs.items():
-        schedule = ev_data[1]
-        charging_points[ev_id] = []
-        for index, movement in enumerate(schedule):
-            battery_level = movement[9]
-            if battery_level <= battery_threshold and movement[7] == 0:  # Checking if battery is low and no passengers
-                charging_points[ev_id].append(index)
-    return charging_points
-
-def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, simulation_time):
-    charging_impact = {}
-    unallocated_tps = []
-    station_occupancy = {cs_id: [0]*simulation_time for cs_id in CSs}
-
-    for ev_id, points in potential_charging_points.items():
-        charging_impact[ev_id] = {}
-        for point in points:
-            ev_location = EVs[ev_id][1][point][4:6]  # Getting EV location at the point of potential charging
-            nearest_cs, distance_to_cs = find_nearest_charging_station(ev_location, CSs)
-            battery_level = EVs[ev_id][1][point][9]
-            charging_duration = int((100 - battery_level) / CSs[nearest_cs][4])
-            # This is the time the EV will arrive at the Charging station
-            time_at_cs = EVs[ev_id][1][point][1] + distance_to_cs
-            station_capacity = CSs[nearest_cs][3]
-            time_lost = 1000000000
-            if time_at_cs < simulation_time:
-                if can_charge_at_station(time_at_cs, charging_duration, station_occupancy[nearest_cs][time_at_cs], station_capacity, simulation_time):
-                    time_lost = distance_to_cs + charging_duration
-                else:
-                    time_lost = calculate_wait_time(time_at_cs, charging_duration, station_occupancy[nearest_cs][time_at_cs], station_capacity[nearest_cs])
-
-            # Only consider TPs that the EV could have served after the potential charging start time
-            lost_tp_weight = 0
-            potential_service_start_time = EVs[ev_id][1][point][1]  # Start time of the movement where EV could have started serving TPs
-            for tp_id, tp_info in TPs.items():
-                tp_start_time = tp_info[0][0]  # Assuming this is the start time of the TP
-                if tp_start_time > potential_service_start_time and tp_start_time <= potential_service_start_time + time_lost:
-                    lost_tp_weight += tp_info[0][9]  # TP weight
-            charging_impact[ev_id][point] = lost_tp_weight
-    return charging_impact
-
 def find_nearest_charging_station(ev_location, CSs):
     nearest_cs = None
     min_distance = float('inf')
@@ -80,27 +35,132 @@ def find_nearest_charging_station(ev_location, CSs):
 def compute_manhattan_distance(point1, point2):
     return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1])
 
-def can_charge_at_station(time_at_cs, charging_duration, occupancy, capacity, simulation_time):
+def can_charge_at_station(time_at_cs, charging_duration, station_occupancy, capacity):
     # Ensure that the CS is available to for the entire Charging duration
     for time_slot in range(time_at_cs, time_at_cs + charging_duration):
-        if occupancy >= capacity:
+        if station_occupancy[time_slot] >= capacity:
             return False
     return True
 
-def decide_on_charging(EVs, charging_impact):
-    acceptable_threshold = 20
-    for ev_id, impacts in charging_impact.items():
-        best_point = min(impacts, key=impacts.get)  # Choose the point with minimum impact
-        if impacts[best_point] < acceptable_threshold:
-            EVs[ev_id][1].insert(best_point, create_charging_movement())  # Add charging movement at best_point
+def calculate_wait_time(time_at_cs, charging_duration, station_occupancy, capacity):
+    wait_time = 0
+    while not can_charge_at_station(time_at_cs + wait_time, charging_duration, station_occupancy, capacity):
+        wait_time += 1
+    return wait_time
+
+def identify_potential_charging_points(EVs, CSs):
+    charging_points = {}
+    battery_threshold = 40
+    for ev_id, ev_data in EVs.items():
+        schedule = ev_data[1]
+        charging_points[ev_id] = []
+        for index, movement in enumerate(schedule):
+            battery_level = movement[9]
+            # Checking if battery is low and no passengers
+            if (battery_level <= battery_threshold and movement[7] == 0 and index != len(schedule)-1):
+                charging_points[ev_id].append(index)
+            # If the EV has too much leeway time in the final movement, we consider that as a potential charging point
+            elif (index == len(schedule)-1 and movement[12] > 40):
+                point = index-1
+                charging_points[ev_id].append(point)
+    return charging_points
+
+def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_occupancy, simulation_time):
+    charging_impact = {}
+    # Define weights for each factor
+    w1, w2, w3, w4 = 1, 1, 1, 1  # These weights can be adjusted based on their importance
+
+    for ev_id, points in potential_charging_points.items():
+        charging_impact[ev_id] = {}
+        best_value = float('inf')
+        for point in points:
+            ev_location = EVs[ev_id][1][point][4:6]
+            for cs_id, cs_info in CSs.items():
+                cs_location = (cs_info[2], cs_info[3])
+                distance_to_cs = compute_manhattan_distance(ev_location, cs_location)
+                battery_level = EVs[ev_id][1][point][9]
+                charging_duration = int((100 - battery_level) / cs_info[4])
+                time_at_cs = EVs[ev_id][1][point][1] + distance_to_cs
+                station_capacity = cs_info[3]
+
+                if time_at_cs < simulation_time:
+                    waiting_time = calculate_wait_time(time_at_cs, charging_duration, station_occupancy[cs_id], station_capacity)
+                    time_lost = distance_to_cs + charging_duration + waiting_time
+
+                    # Calculate overridden TPs
+                    overridden_tps_count = 0
+                    unallocated_tps = []
+                    for tp_id, tp_info in TPs.items():
+                        tp_start_time = tp_info[0][6]
+                        tp_late_finish = tp_info[0][8]
+                        if tp_start_time > EVs[ev_id][1][point][1] and tp_late_finish <= time_at_cs + time_lost:
+                            overridden_tps_count += tp_info[0][9]
+                            unallocated_tps.append(tp_id)
+
+                    # How early in the simulation the charging is considered
+                    simulation_early_factor = time_at_cs / simulation_time
+
+                    # Calculate the total value considering all factors
+                    total_value = (w1 * distance_to_cs) + (w2 * waiting_time) + (w3 * overridden_tps_count) + (w4 * simulation_early_factor)
+                    if total_value < best_value:
+                        best_value = total_value
+                        charging_impact[ev_id][(point, cs_id)] =(cs_id, distance_to_cs, waiting_time, charging_duration,
+                                                                unallocated_tps )
+    return charging_impact
+
+
+def unpack_charging_movements(EVs, CSs, charging_impact, SECs, simulation_time):
+    # Movement type labels as integers
+    MOVEMENT_TO_CS = 1001
+    MOVEMENT_WAIT_CS = 1002
+    MOVEMENT_CHARGE_CS = 1003
+
+    for ev_id, charging_options in charging_impact.items():
+        for point, impact in charging_options.items():
+            cs_id, distance_to_cs, wait_time, charging_duration, unallocated_tps  = impact
+            cs_location = (CSs[cs_id][1], CSs[cs_id][2])
+            start_time = EVs[ev_id][1][point[0]][1]  # Assuming the end time of the current movement as the start time for charging
+            initial_battery = EVs[ev_id][1][point[0]][9]  # Assuming the ending battery level of the current movement
+            end_battery_level = 100
+            # Insert movements for going to CS, waiting (if necessary), and charging
+            EVs[ev_id][1].insert(point[0]+1, create_charging_movement(start_time, start_time + distance_to_cs, cs_location, MOVEMENT_TO_CS, initial_battery, initial_battery-distance_to_cs, distance_to_cs))
+            is_waiting = False
+            time_finished_charging = start_time + distance_to_cs + wait_time + charging_duration
+            if wait_time > 0:
+                EVs[ev_id][1].insert(point[0]+2, create_charging_movement(start_time + distance_to_cs, start_time + distance_to_cs + wait_time, cs_location, MOVEMENT_WAIT_CS, initial_battery, initial_battery-distance_to_cs, distance_to_cs))
+                is_waiting = True
+            if is_waiting:
+                EVs[ev_id][1].insert(point[0]+3, create_charging_movement(start_time + distance_to_cs + wait_time, time_finished_charging, cs_location, MOVEMENT_CHARGE_CS, initial_battery, end_battery_level, distance_to_cs))
+
+            else:
+                EVs[ev_id][1].insert(point[0] + 2, create_charging_movement(start_time + distance_to_cs + wait_time,
+                                                                           time_finished_charging,
+                                                                            cs_location, MOVEMENT_CHARGE_CS,
+                                                                            initial_battery, end_battery_level,
+                                                                            distance_to_cs))
+            # Updating the final two movements of EV according to the charging movement
+            penultimate_movement = len(EVs[ev_id][1])-2
+            final_movement = len(EVs[ev_id][1])-1
+            sec_location = (SECs[EVs[ev_id][0][0]][1], SECs[EVs[ev_id][0][0]][1])
+            distance_to_sec = compute_manhattan_distance(cs_location, sec_location)
+            # time_at_moment =  EVs[ev_id][1][penultimate_movement][1]
+            time_at_moment = simulation_time - distance_to_sec
+            leeway = time_at_moment - time_finished_charging
+            EVs[ev_id][1][penultimate_movement]= (time_finished_charging, time_at_moment, cs_location[0], cs_location[1],
+                                                  cs_location[0], cs_location[1], end_battery_level, end_battery_level, 0, leeway, 0)
+            return_sec = time_at_moment + distance_to_sec
+            if distance_to_sec == 0:
+                return_sec = EVs[ev_id][1][final_movement][1]
+            EVs[ev_id][1][final_movement] = (
+            time_at_moment, return_sec, cs_location[0], cs_location[1], sec_location[0],
+            sec_location[1], end_battery_level, (end_battery_level - distance_to_sec), 1000000000, 0, distance_to_sec)
+
     return EVs
 
-def create_charging_movement(start_time, end_time, charging_station_location, EV_initial_battery, EV_max_battery):
-    # Assuming the movement format: (start time, end time, start location, end location, initial battery level, final battery level, movement type)
-    # Movement type for charging can be a specific integer or string identifier, e.g., 'charge'
-    movement_type = 'charge'
-    movement = (start_time, end_time, charging_station_location, charging_station_location, EV_initial_battery, EV_max_battery, movement_type)
-    return movement
+def create_charging_movement(start_time, end_time, location, movement_type, initial_battery, final_battery, movement_distance):
+    # Assuming leeway and movement distance are not applicable for charging-related movements
+    leeway = 0
+    return (start_time, end_time, location[0], location[1], location[0], location[1], 0, 0, initial_battery, final_battery, movement_type, leeway, movement_distance)
 
 def reallocate_trips_post_charging(EVs, TPs, SECs, unalloated_tps):
     additional_weight = 0
@@ -122,11 +182,6 @@ def EV_is_available_after_charging(EV, simulation_end_time):
     # Check if the end time of the last movement (charging) is before the simulation end time
     return end_time_of_last_movement < simulation_end_time
 
-def calculate_wait_time(time_at_cs, charging_duration, occupancy, capacity):
-    wait_time = 0
-    while not can_charge_at_station(time_at_cs + wait_time, charging_duration, occupancy, capacity):
-        wait_time += 1
-    return wait_time
 
 def try_to_allocate_EV(tp_id, ev_id, SECs, EVs, TPs):
     (my_EV_static_info, my_EV_schedule) = EVs[ev_id]
@@ -156,6 +211,8 @@ def solve_reactive_simulation(city,
     sorted_TPs = sorted(TPs.items(), key=lambda tp: (-tp[1][0][9], tp[1][1]))
     EV_IDs = sorted(EVs.keys())
     unallocated_tps = []
+    simulation_time = city[2]
+    station_occupancy = {cs_id: [0] * simulation_time for cs_id in CSs}
     for tp in sorted_TPs:
         tp_id = tp[0]
         is_allocated = False
@@ -209,11 +266,10 @@ def solve_reactive_simulation(city,
     potential_charging_points = identify_potential_charging_points(EVs, CSs)
 
     # Evaluate charging impact
-    simulation_time = city[2]
-    charging_impact = evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, simulation_time)
+    charging_impact = evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_occupancy, simulation_time)
 
     # Decide on charging and update EV schedules
-    EVs = decide_on_charging(EVs, charging_impact)
+    EVs = unpack_charging_movements(EVs, CSs, charging_impact, SECs, simulation_time)
 
     # Reallocate trips post-charging
     additional_weight = reallocate_trips_post_charging(EVs, TPs, SECs, unallocated_tps)
