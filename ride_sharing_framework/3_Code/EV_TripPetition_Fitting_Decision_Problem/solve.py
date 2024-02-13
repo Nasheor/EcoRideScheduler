@@ -68,7 +68,7 @@ def identify_potential_charging_points(EVs, CSs):
 def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_occupancy, simulation_time):
     charging_impact = {}
     # Define weights for each factor
-    w1, w2, w3, w4, w5 = 1, 1, 1, 1, 1  # These weights can be adjusted based on their importance
+    w1, w2, w3, w4, w5 = 1, 1, 1, 1, 1  #
 
     for ev_id, points in potential_charging_points.items():
         charging_impact[ev_id] = {}
