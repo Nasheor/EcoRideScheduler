@@ -124,7 +124,7 @@ def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_o
 
                     # Calculate the total value considering all factors
                     total_value = (w1 * distance_to_cs) + (w2 * waiting_time) + (w3 * overridden_tps_count) + \
-                                  (w4 * simulation_early_factor) + (w5 * potential_trip_impact)
+                                  (w4 * simulation_early_factor) +  (w5 * potential_trip_impact)
                     if total_value < best_value:
                         best_value = total_value
                         charging_impact[ev_id][(point, cs_id)] =(cs_id, distance_to_cs, waiting_time, charging_duration,
