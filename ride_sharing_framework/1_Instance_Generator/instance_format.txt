@@ -68,4 +68,3 @@
            (08) UB. Integer => Time of the late drop-off of the trip petition.
            (09) TW. Integer => Weight of the trip petition.
 
-(119, 153, 17, 17, 0, 0, 0, 0, 34, 0, 1000000000, 0, 34)

@@ -42,8 +42,8 @@ import compute_neighbors
 # }
 
 constraints = {
-    'secs': [3],
-    'tps': [15],
+    'secs': [3, 20, 50],
+    'tps': [15, 50, 500],
     'evs': [4.0],
     'sys_energy': [6.0],
     'flexiblity': [100],

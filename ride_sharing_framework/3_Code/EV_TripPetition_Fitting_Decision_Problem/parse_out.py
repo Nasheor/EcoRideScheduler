@@ -37,6 +37,7 @@ import pandas as pd
 # ----------------------------------------------------
 def parse_out(output_file_name,
               num_trips_satisfied,
+              unallocated_tps,
               EVs,
               TPs
              ):
@@ -50,9 +51,10 @@ def parse_out(output_file_name,
 
     # 3. We compute the percentage of trips satisfied
     num_trips = len(TP_IDs)
+    unallocated_trips = len(unallocated_tps)
     my_str = "-------------------------------------------------------------------------\n"
     my_output_stream.write(my_str)
-    my_str = "TPs satisfied = " + str(num_trips_satisfied) + "; Total TPs = " + str(num_trips) + "; Percentage Satisfied + " + str(round(num_trips_satisfied / num_trips , 3) * 100) + "%\n"
+    my_str = "Weight of TPs satisfied = " + str(num_trips_satisfied) + "; Total TPs = " + str(len(TPs.keys())) + "; Percentage Satisfied + " + str(round((num_trips - unallocated_trips)/num_trips , 3) * 100) + "%\n"
     my_output_stream.write(my_str)
     my_str = "-------------------------------------------------------------------------\n"
     my_output_stream.write(my_str)
@@ -86,7 +88,7 @@ def parse_out(output_file_name,
 
         my_str = "--------------------------------------\n"
         my_output_stream.write(my_str)
-        my_str = "Num TPs served = " + str(num_TPs_served) + "\n"
+        my_str = "Labels = " + str(num_TPs_served) + "\n"
         my_output_stream.write(my_str)
         ev_trips_served[ev_id] = " ".join([ str(x) for x in sorted(TP_served_by_EV.keys()) ])
         # if len(ev_trips_served[ev_id].split(" ")) > 0 and ev_trips_served[ev_id].split(" ")[0]!= '':
@@ -115,6 +117,13 @@ def parse_out(output_file_name,
         # 4.2. We print the schedule
         my_str = "Schedule:\n"
         my_output_stream.write(my_str)
+        for i in range(len(my_EV_schedule)):
+            battery_level = my_EV_schedule[i][9]
+            if my_EV_schedule[i][8] < 0:
+                movement = list(my_EV_schedule[i])
+                movement[8] = my_EV_schedule[i-1][9]
+                my_EV_schedule[i] = movement
+
         for item in my_EV_schedule:
             my_str = " ".join([ str(x) for x in item ]) + "\n"
             my_output_stream.write(my_str)
@@ -144,12 +153,12 @@ def parse_out(output_file_name,
 
     # 6. We close the file
     my_output_stream.close()
-    parse_out_analysis(output_file_name,
-              num_trips_satisfied,
-              EVs,
-              TPs,
-              ev_trips_served,
-              ev_energy_consumed)
+    # parse_out_analysis(output_file_name,
+    #           num_trips_satisfied,
+    #           EVs,
+    #           TPs,
+    #           ev_trips_served,
+    #           ev_energy_consumed)
 
 def calculateManhattanDistance(pickup_x, pickup_y, drop_x, drop_y):
     return (abs(pickup_x - drop_x) + abs(pickup_y - drop_y))

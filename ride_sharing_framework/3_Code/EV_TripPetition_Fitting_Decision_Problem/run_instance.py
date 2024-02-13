@@ -38,7 +38,7 @@ def my_main(input_file_name, output_file_name):
     (city, SECs, CSs, EVs, TPs) = parse_in.parse_in(input_file_name)
 
     # 3. We run the reactive simulation
-    res = solve.solve_reactive_simulation(city,
+    res, unallocated_tps = solve.solve_reactive_simulation(city,
                                           SECs,
                                           CSs,
                                           EVs,
@@ -48,12 +48,13 @@ def my_main(input_file_name, output_file_name):
     # 4. We parse the instance out
     parse_out.parse_out(output_file_name,
                         res,
+                        unallocated_tps,
                         EVs,
                         TPs
                        )
 
     # 5. We return res
-    return res
+    return res, unallocated_tps, len(TPs)
 
 
 # --------------------------------------------------------

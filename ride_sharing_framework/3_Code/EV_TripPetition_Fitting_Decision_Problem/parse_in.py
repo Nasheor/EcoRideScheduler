@@ -39,6 +39,7 @@ import math
 # instance_info[3] -> TPs
 # ----------------------------------------------------
 def parse_in(input_file_name):
+    print(f"Reading File {input_file_name}")
     #  1. We create the output variable
     res = ()
 
@@ -64,7 +65,10 @@ def parse_in(input_file_name):
 
     # 3.1. We parse the simulation information block
            # (city_max_x_location, city_max_y_location, simulation_time_horizon)
-    city = tuple(map(int, my_input_stream.readline().strip().split(" ")))
+    try:
+        city = tuple(map(int, my_input_stream.readline().strip().split(" ")))
+    except ValueError:
+        print(f"{city}")
 
     # 3.2. We parse the SEC information block
     SECs = {}

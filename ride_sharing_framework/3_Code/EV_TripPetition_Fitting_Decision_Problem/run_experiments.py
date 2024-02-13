@@ -66,8 +66,8 @@ def my_main(input_folder, output_folder):
             output_file_name = output_folder + file
 
             # 4.3.2. We solve the instance
-            num_trips_satisfied = run_instance.my_main(input_file_name, output_file_name)
-
+            trips_weight, unallocated_trips, num_trips = run_instance.my_main(input_file_name, output_file_name)
+            num_trips_satisfied = num_trips - len(unallocated_trips)
             # 4.3.3. We write the result to the solution file
             my_str = input_file_name + ";" + str(num_trips_satisfied) + "\n"
             solution_csv_stream.write(my_str)
