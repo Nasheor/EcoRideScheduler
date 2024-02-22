@@ -230,7 +230,7 @@ def reallocate_trips_post_charging(EVs, TPs, SECs, unallocated_tps, simulation_t
                     except ValueError:
                         print(f"{tp_id} is already allocated and not present in the unallocated list")
                     break
-    return additional_weight, EVs
+    return additional_weight,EVs
 
 def EV_is_available_after_charging(EV, simulation_end_time):
     # Assuming EV's schedule is a list of movements and each movement is a tuple.
