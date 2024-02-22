@@ -89,8 +89,8 @@ def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_o
                         if time_slot % simulation_time not in simulated_occupancy[cs_id]:
                             simulated_occupancy[cs_id][time_slot % simulation_time] = 1
 
-                    waiting_time = calculate_wait_time(time_at_cs, charging_duration, station_occupancy[cs_id], station_capacity)
-                    time_lost = distance_to_cs + charging_duration + waiting_time
+                    # Calculate waiting time for other vehicles
+                    waiting_time_other_vehicles = 0
                     for other_ev_id, other_ev_schedule in EVs.items():
                         if other_ev_id != ev_id:
                             for movement in other_ev_schedule[1]:
@@ -98,6 +98,10 @@ def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_o
                                     wait_start = max(time_at_cs, movement[0])
                                     wait_end = min(time_at_cs + charging_duration, movement[1])
                                     waiting_time_other_vehicles += max(0, wait_end - wait_start)
+
+                    waiting_time = calculate_wait_time(time_at_cs, charging_duration, station_occupancy[cs_id], station_capacity)
+                    total_waiting_time = waiting_time + waiting_time_other_vehicles
+                    time_lost = distance_to_cs + charging_duration + total_waiting_time
 
                     # Calculate the potential impact on other vehicles' trip allocations
                     potential_trip_impact = 0
@@ -125,7 +129,7 @@ def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_o
                     # Calculate the total value considering all factors
                     total_value = (w1 * distance_to_cs) + (w2 * waiting_time) + (w3 * overridden_tps_count) + \
                                   (w4 * simulation_early_factor) +  (w5 * potential_trip_impact)
-                    if total_value < best_value:
+                    if total_value > best_value:
                         best_value = total_value
                         charging_impact[ev_id][(point, cs_id)] =(cs_id, distance_to_cs, waiting_time, charging_duration,
                                                                 unallocated_tps )
