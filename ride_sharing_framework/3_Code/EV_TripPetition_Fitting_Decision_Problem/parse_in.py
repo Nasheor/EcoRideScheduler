@@ -39,7 +39,6 @@ import math
 # instance_info[3] -> TPs
 # ----------------------------------------------------
 def parse_in(input_file_name):
-    print(f"Reading File {input_file_name}")
     #  1. We create the output variable
     res = ()
 
@@ -49,13 +48,13 @@ def parse_in(input_file_name):
     # 1.2. We output the SECs information
     SECs = {}
 
-    # 1.3. We output the CSs information
+    # 1.4. We output the Charging Stations information
     CSs = {}
 
-    # 1.4. We output the EVs information
+    # 1.5. We output the EVs information
     EVs = {}
 
-    # 1.5. We output the trip petitions
+    # 1.6. We output the trip petitions
     TPs = {}
 
     #  2. We open the file for reading
@@ -65,10 +64,7 @@ def parse_in(input_file_name):
 
     # 3.1. We parse the simulation information block
            # (city_max_x_location, city_max_y_location, simulation_time_horizon)
-    try:
-        city = tuple(map(int, my_input_stream.readline().strip().split(" ")))
-    except ValueError:
-        print(f"{city}")
+    city = tuple(map(int, my_input_stream.readline().strip().split(" ")))
 
     # 3.2. We parse the SEC information block
     SECs = {}
@@ -88,30 +84,19 @@ def parse_in(input_file_name):
 
         SECs[ SEC_id ] = tuple(info)
 
-    # 3.3. We parse the Charging Stations information block
-    CSs = {}
-
-    # 3.3.1. We get the number of EVs
+    # 3.3. We parse the Charging Station information block
     num_CSs = int(my_input_stream.readline().strip())
-
-    # 3.3.2. We parse the information for each of them
     for _ in range(num_CSs):
-        # I. Main info
-
         info = list(map(int, my_input_stream.readline().strip().split(" ")))
-
         CS_id = info[0]
-        del info[0]
-
-        CSs[ CS_id ] = tuple(info)
-
-    # 3.44. We parse the EV information block
+        CSs[CS_id] = tuple(info[1:])  # Adjusted for CS details
+    # 3.3. We parse the EV information block
     EVs = {}
 
-    # 3.4.1. We get the number of EVs
+    # 3.3.1. We get the number of EVs
     num_EVs = int(my_input_stream.readline().strip())
 
-    # 3.4.2. We parse the information for each of them
+    # 3.3.2. We parse the information for each of them
     for iteration in range(num_EVs):
         # I. Main info
 
@@ -151,19 +136,19 @@ def parse_in(input_file_name):
             schedule.append(mov_info)
 
             # II.3.3. We enter the third movement
-            mov_info = (end_of_resting_time + 1, end_of_resting_time + 5, x_coord, y_coord, x_coord, y_coord, 0, 0, EV_energy, EV_energy, 0, 0, 0)
+            mov_info = (end_of_resting_time + 1, end_of_resting_time + 2, x_coord, y_coord, x_coord, y_coord, 0, 0, EV_energy, EV_energy, 0, 0, 0)
             schedule.append(mov_info)
 
         # III. We enter the EV in the dictionary
         EVs[ EV_id ] = [ tuple(info), schedule ]
 
-    # 3.5. We parse the TPs information
+    # 3.4. We parse the TPs information
     TPs = {}
 
-    # 3.5.1. We get the number of TPs
+    # 3.4.1. We get the number of TPs
     num_TPs = int(my_input_stream.readline().strip())
 
-    # 3.5.2. We parse the information for each of them
+    # 3.4.2. We parse the information for each of them
     for _ in range(num_TPs):
         # I. Main info
         (tp_id, SEC_id, EV_id) = tuple(map(int, my_input_stream.readline().strip().split(" ")))

@@ -1,41 +1,3 @@
-# --------------------------------------------------------
-#
-# PYTHON PROGRAM DEFINITION
-#
-# The knowledge a computer has of Python can be specified in 3 levels:
-# (1) Prelude knowledge --> The computer has it by default.
-# (2) Borrowed knowledge --> The computer gets this knowledge from 3rd party libraries defined by others
-#                            (but imported by us in this program).
-# (3) Generated knowledge --> The computer gets this knowledge from the new functions defined by us in this program.
-#
-# When launching in a terminal the command:
-# user:~$ python3 this_file.py
-# our computer first processes this PYTHON PROGRAM DEFINITION section of the file.
-# On it, our computer enhances its Python knowledge from levels (2) and (3) with the imports and new functions
-# defined in the program. However, it still does not execute anything.
-#
-# --------------------------------------------------------
-
-# ------------------------------------------
-# IMPORTS
-# ------------------------------------------
-
-
-# ----------------------------------------------------
-# FUNCTION 01 - select_case_based_on_time_window
-# ----------------------------------------------------
-# Description:
-# Given the trip petition and the EV movement, we decide in which case we find ourselves at.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) ta. Integer => Represents the time of the start of the EV movement.
-# (2) tb. Integer => Represents the time of the end of the EV movement.
-# (3) tp_lb. Integer => Represents the start of the time window where we can consider accommodating the action.
-# (4) UB. Integer => Represents the end of the time window where we can consider accommodating the action.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) action_movement_index. Integer. => Case to be considered.
-# ----------------------------------------------------
 def select_case_based_on_time_window(ta,
                                      tb,
                                      tp_lb,
@@ -109,22 +71,6 @@ def select_case_based_on_time_window(ta,
     # 3. We return res
     return res
 
-
-# ----------------------------------------------------
-# FUNCTION 02 - compute_distance_among_two_points
-# ----------------------------------------------------
-# Description:
-# Given two points in the city, computes the distance among them.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) SX. Integer. Represents the X-axis of the source location.
-# (2) SY. Integer. Represents the Y-axis of the source location.
-# (3) TX. Integer. Represents the X-axis of the target location.
-# (4) TY. Integer. Represents the Y-axis of the target location.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) res. Integer. => Distance from source to target.
-# ----------------------------------------------------
 def compute_distance_among_two_points(SX,
                                       SY,
                                       TX,
@@ -138,21 +84,6 @@ def compute_distance_among_two_points(SX,
     return res
 
 
-# ----------------------------------------------------
-# FUNCTION 03 - is_extra_energy_and_delay_assumed
-# ----------------------------------------------------
-# Description:
-# Given the remaining schedule after accommodating an action, it computes whether subsequent trips can assume the extra delay or not.
-# It also updates each movement with the extra energy consumed.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) my_remaining_EV_schedule. list[Movement]. Represents the remaining schedule of the EV after accommodating the action.
-# (2) extra_energy. Integer. Represents the extra energy to be assumed by subsequent trips.
-# (3) extra_delay. Integer. Represents the extra delay to be assumed by subsequent trips.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) is_satisfied. Boolean. => True if it is assumed and False otherwise.
-# (2) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly if the trip is allocated.
 # ----------------------------------------------------
 def is_extra_energy_and_delay_assumed(my_remaining_EV_schedule,
                                       extra_energy,
@@ -243,21 +174,6 @@ def is_extra_energy_and_delay_assumed(my_remaining_EV_schedule,
     return res
 
 
-# ------------------------------------------------------------------
-# FUNCTION 04 - get_rid_of_redundant_resting_trips
-# ------------------------------------------------------------------
-# Description:
-# Given a valid schedule, to which the action has been accommodated, we update it by removing any redundant resting movement.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) my_EV_schedule. list[Movement]. Represents the schedule of the EV.
-# (2) candidate_index. Integer. Represents the movement where the action was attempted to be inserted at.
-# (3) res_offset. Integer. Represents the offset with respect to movement_index where the action was finally inserted at.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) res_offset. Integer. => Represents the new offset after all redundant movements are removed.
-# (2) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly.
-# ----------------------------------------------------
 def get_rid_of_redundant_resting_trips(my_EV_schedule,
                                        candidate_index,
                                        res_offset
@@ -319,27 +235,6 @@ def get_rid_of_redundant_resting_trips(my_EV_schedule,
     return res
 
 
-# ------------------------------------------------------------------
-# FUNCTION 05 - ev_action_and_movement_allocation_attempt
-# ------------------------------------------------------------------
-# Description:
-# We decide whether the EV can accommodate an action by considering two consecutive movements of its schedule.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) my_EV_schedule. list[Movement]. Represents the schedule of the EV.
-# (2) tp_id. Integer. Represents the trip identifier.
-# (3) my_TP_static_info. tuple( LB, SX, SY, TX, TY, EP, LP, ED, UB ). Represents the trip info, where:
-# (4) max_passengers. Integer. Represents the maximum number of passengers the EV supports.
-# (5) movement_index. Integer. Represents the index on the movement we are considering for allocating the action.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) res_offset. Integer. => Represents whether:
-#                      - The action cannot be allocated at all (-2)
-#                      - The action cannot be allocated in this movement (-1)
-#                      - The action can be allocated (>= 0), and the action is entered in the new schedule at position
-#                                                            my_EV_schedule[ movement_index + res ]
-# (2) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly if the trip is allocated.
-# ----------------------------------------------------
 def ev_action_and_movement_allocation_attempt(my_EV_schedule,
                                               tp_id,
                                               my_TP_static_info,
@@ -367,18 +262,6 @@ def ev_action_and_movement_allocation_attempt(my_EV_schedule,
 
     # 5. When ensure they are two consecutive movements, and that the first is indeed a resting movement
     assert (TL == 0)
-    # NOTE: assert (NTL != 0)
-    # assert (AX == BX)
-    # assert (AY == BY)
-    #assert (PS == PE) => Case 1 leads to resting trips picking-up or dropping-off passengers.
-    # assert (ES == EE)
-    # assert (LW == (TB-TA))
-    # assert (TD == 0)
-    # assert (NTA == TB)
-    # assert (NAX == BX)
-    # assert (NAY == BY)
-    # assert (NPS == PE)
-    # assert (NES == EE)
 
     # 6. We compute the distances d1, d2 and d3
     d1 = compute_distance_among_two_points(AX, AY, SX, SY)
@@ -545,29 +428,6 @@ def ev_action_and_movement_allocation_attempt(my_EV_schedule,
     # 15. We return res
     return res
 
-
-# ----------------------------------------------------
-# FUNCTION 06 - last_call_case
-# ----------------------------------------------------
-# Description:
-# Given a concrete movement of the schedule of an EV and an action of the new trip petition (pick-up or drop-off), we decide whether the EV can accommodate such action with this movement.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) my_EV_schedule. list[Movement]. Represents the schedule of the EV.
-# (2) tp_id. Integer. Represents the trip identifier.
-# (3) my_TP_static_info. tuple( LB, SX, SY, TX, TY, EP, LP, ED, UB ). Represents the trip info.
-# (4) max_passengers. Integer. Represents the maximum number of passengers the EV supports.
-# (5) movement_index. Integer. Represents the index on the movement we are considering for allocating the action.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) res_offset. Integer. => Represents whether:
-#                      - The action cannot be allocated at all (-2)
-#                      - The action cannot be allocated in this movement (-1)
-#                      - The action can be allocated (>= 0), and the action is entered in the new schedule at position
-#                                                            my_EV_schedule[ movement_index + res ]
-# (2) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly if the trip is allocated.
-#                                     Even if it is not explicitly outputted, it is done by modifying the input parameter.
-# ----------------------------------------------------
 def last_call_case(my_EV_schedule,
                    tp_id,
                    my_TP_static_info,
@@ -621,28 +481,6 @@ def last_call_case(my_EV_schedule,
     return res
 
 
-# ----------------------------------------------------
-# FUNCTION 07 - normal_call_case
-# ----------------------------------------------------
-# Description:
-# Given a concrete movement of the schedule of an EV and an action of the new trip petition (pick-up or drop-off), we decide whether the EV can accommodate such action with this movement.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) case_number. Integer. The case this movement represents with respect to the trip petition.
-# (2) my_EV_schedule. list[Movement]. Represents the schedule of the EV.
-# (3) tp_id. Integer. Represents the trip identifier.
-# (4) my_TP_static_info. tuple( LB, SX, SY, TX, TY, EP, LP, ED, UB ). Represents the trip info.
-# (5) max_passengers. Integer. Represents the maximum number of passengers the EV supports.
-# (6) movement_index. Integer. Represents the index on the movement we are considering for allocating the action.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) res_offset. Integer. => Represents whether:
-#                      - The action cannot be allocated at all (-2)
-#                      - The action cannot be allocated in this movement (-1)
-#                      - The action can be allocated (>= 0), and the action is entered in the new schedule at position
-#                                                            my_EV_schedule[ movement_index + res ]
-# (2) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly if the trip is allocated.
-# ----------------------------------------------------
 def normal_call_case(case_number,
                      my_EV_schedule,
                      tp_id,
@@ -699,24 +537,6 @@ def normal_call_case(case_number,
     return res
 
 
-# ----------------------------------------------------------------
-# FUNCTION 08 - update_passengers_of_movements
-# ----------------------------------------------------------------
-# Description:
-# Given a trip attempted by picking-up and dropping-off the passenger at concrete movements,
-# we ensure the EV had enough space for this extra passenger during the time she was on it.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) my_EV_schedule. list[Movement]. Represents the schedule of the EV.
-# (2) pick_up_movement_index. Integer. Represents the index on the movement we are considering for allocating the pick-up action.
-# (3) drop_off_movement_index. Integer. Represents the index on the movement we are considering for allocating the drop-off action.
-# (4) max_passengers. Integer. Represents the maximum number of passengers the EV supports.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) is_satisfied. Boolean. => Represents whether there was enough space in the EV.
-# (2) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly the number of passengers
-#                                     between the pick-up and the drop-off.
-# ----------------------------------------------------
 def update_passengers_of_movements(my_EV_schedule,
                                    pick_up_movement_index,
                                    drop_off_movement_index,
@@ -782,26 +602,6 @@ def update_passengers_of_movements(my_EV_schedule,
     # 6. We return res
     return res
 
-
-# ----------------------------------------------------
-# FUNCTION 09 - ev_action_allocation_attempt
-# ----------------------------------------------------
-# Description:
-# Given the schedule of an EV and an action of the new trip petition (pick-up or drop-off), we decide whether the EV can accommodate such action.
-# ----------------------------------------------------
-# Input Parameters:
-# (1) my_EV_schedule. list[Movement]. Represents the schedule of the EV.
-# (2) tp_id. Integer. Represents the trip identifier.
-# (3) my_TP_static_info. tuple( LB, SX, SY, TX, TY, EP, LP, ED, UB ). Represents the trip info, where:
-# (4) max_passengers. Integer. Represents the maximum number of passengers the EV supports.
-# (5) start_index. Integer. Represents the index on the movement list that we start considering for allocating the action.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) res_index. Integer. => Index in the schedule of the movement where the action has been accommodated.
-#                                         -1 if not accommodated.
-
-# (2) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly if the trip is allocated.
-# ----------------------------------------------------
 def ev_action_allocation_attempt(my_EV_schedule,
                                  tp_id,
                                  my_TP_static_info,
@@ -827,7 +627,7 @@ def ev_action_allocation_attempt(my_EV_schedule,
     #        from when the trip is announced
     #        until the late pick-up
     if (tp_id > 0):
-        tp_lb = EP
+        tp_lb = LB
         tp_ub = LP
 
     # 3.2. If it is a drop-off action, then the window is
@@ -906,25 +706,6 @@ def ev_action_allocation_attempt(my_EV_schedule,
     # 7. We return res
     return res
 
-
-# ----------------------------------------------------
-# FUNCTION 10 - ev_return_to_sec_allocation_attempt
-# ----------------------------------------------------
-# Description:
-# Given the schedule of an EV and a new trip petition, we check if the EV comes back to the SEC. Otherwise, we try to accommodate such trip as well.
-# ----------------------------------------------------
-# Input Parameters:
-
-# (1) my_EV_schedule. [( TA, TB, AX, AY, BX, BY, PS, PE, ES, EE, TL, LW, TD )]. => The schedule of the EV, as the list of Movements. Each movement is represented as a tuple, where:
-# (2) sec_x_location. The X-axis of the SEC, in case the EV has to come back to it.
-# (3) sec_y_location. The Y-axis of the SEC, in case the EV has to come back to it.
-# ----------------------------------------------------
-# Output Parameters:
-# (1) res_index. Integer. => Index in the schedule of the movement to come back to the SEC.
-#                                               -1 if not possible to come back.
-
-# (2) my_EV_schedule. Represents the new schedule of the EV, updated accordingly if the trip is allocated.
-# ----------------------------------------------------
 def ev_return_to_sec_allocation_attempt(my_EV_schedule,
                                         sec_x_location,
                                         sec_y_location
@@ -957,56 +738,6 @@ def ev_return_to_sec_allocation_attempt(my_EV_schedule,
     # 6. We return res
     return res
 
-
-# ----------------------------------------------------
-# FUNCTION 11 - ev_trip_allocation_attempt
-# ----------------------------------------------------
-# Description:
-# Given the schedule of an EV and a new trip petition, we decide whether the EV can accommodate the trip.
-# ----------------------------------------------------
-# Input Parameters:
-
-# (1) my_EV_schedule. list[Movement]. Represents the schedule of the EV.
-#        Each Movement is a tuple( TA, TB, AX, AY, BX, BY, PS, PE, ES, EE, TL, LW, TD ), where:
-#           (00) TA. Integer => Time of the start of the movement.
-#           (01) TB. Integer => Time of the end of the movement.
-#           (02) AX. Integer => X-axis of the position at the start of the movement.
-#           (03) AY. Integer => Y-axis of the position at the start of the movement.
-#           (04) BX. Integer => X-axis of the position at the end of the movement.
-#           (05) BY. Integer => Y-axis of the position at the end of the movement.
-#           (06) PS. Integer => Number of passengers at the start of the movement.
-#           (07) PE. Integer => Number of passengers at the end of the movement.
-#           (08) ES. Integer => Battery left at the start of the movement.
-#           (09) EE. Integer => Battery left at the end of the movement.
-#           (10) TL. Integer => Movement label.
-#           (11) LW. Integer => Leeway or time the movement can be delayed.
-#           (12) TD. Integer => Movement distance covered.
-
-# (2) tp_id. Integer. Represents the trip identifier.
-
-# (3) my_TP_static_info. tuple( LB, SX, SY, TX, TY, EP, LP, ED, UB ). Represents the trip info, where:
-#           (00) LB. Integer => Time the trip petition is launched / announced.
-#           (01) SX. Integer => X-axis of the pick-up position.
-#           (02) SY. Integer => Y-axis of the pick-up position.
-#           (03) TX. Integer => X-axis of the drop-off position.
-#           (04) TY. Integer => Y-axis of the drop-up position.
-#           (05) EP. Integer => Time of the early pick-up of the trip petition.
-#           (06) LP. Integer => Time of the late pick-up of the trip petition.
-#           (07) ED. Integer => Time of the early drop-off of the trip petition.
-#           (08) UB. Integer => Time of the late drop-off of the trip petition.
-
-# (4) max_passengers. Integer. Represents the maximum number of passengers the EV supports.
-# (5) sec_x_location. Integer. Represents the X-axis of the SEC, in case the EV has to come back to it.
-# (6) sec_y_location. Integer. Represents the Y-axis of the SEC, in case the EV has to come back to it.
-
-# ----------------------------------------------------
-# Output Parameters:
-# (1) is_allocated. Boolean. Represents whether the trip can be allocated or not.
-# (2) pick_up_movement_index. Integer. Represents the index in the schedule of the movement to pick-up the passenger.
-# (3) is_allocated. Integer. Represents the index in the schedule of the movement to drop-off the passenger.
-# (4) is_allocated. Integer. Represents the index in the schedule of the movement to return back to the SEC.
-# (5) my_EV_schedule. list[Movement]. Represents the new schedule of the EV, updated accordingly if the trip is allocated.
-# ----------------------------------------------------
 def ev_trip_allocation_attempt(my_EV_schedule,
                                tp_id,
                                my_TP_static_info,
@@ -1096,21 +827,6 @@ def ev_trip_allocation_attempt(my_EV_schedule,
     # 8. We return res
     return res
 
-
-# --------------------------------------------------------
-#
-# PYTHON PROGRAM EXECUTION
-#
-# Once our computer has finished processing the PYTHON PROGRAM DEFINITION section its knowledge is set.
-# Now its time to apply this knowledge.
-#
-# When launching in a terminal the command:
-# user:~$ python3 this_file.py
-# our computer finally processes this PYTHON PROGRAM EXECUTION section, which:
-# (i) Specifies the function F to be executed.
-# (ii) Define any input parameter such this function F has to be called with.
-#
-# --------------------------------------------------------
 if __name__ == '__main__':
     # 1. We get the parameters of the TP_2_EV attempt
     tuple_1 = (38625, 49998, 5000, 5000, 5000, 5000, 0, 0, 17816, 17816, 0, 11373, 0)

@@ -32,23 +32,32 @@ import compute_neighbors
 #     'flexiblity': [ 0.1],
 # }
 
-# constraints = {
-#     'secs': [16],
-#     'tps': [300],
-#     'evs': [1.0],
-#     'sys_energy': [6.0],
-#     'flexiblity': [10],
-#     'dispatch': ['start']
-# }
-
 constraints = {
-    'secs': [3, 20, 50],
-    'tps': [15, 50, 500],
-    'evs': [4.0],
+    'secs': [16],
+    'tps': [300],
+    'evs': [1.0],
     'sys_energy': [6.0],
     'flexiblity': [100],
     'dispatch': ['start']
 }
+
+# constraints = {
+#     'secs': [10, 20, 50],
+#     'tps': [500, 1000, 10000],
+#     'evs': [4.0, 10.0, 20.0, 100.0, 400.0],
+#     'sys_energy': [6.0],
+#     'flexiblity': [100],
+#     'dispatch': ['start']
+# }
+
+# constraints = {
+#     'secs': [5],
+#     'tps': [50],
+#     'evs': [2.00],
+#     'sys_energy': [6.0],
+#     'flexiblity': [100],
+#     'dispatch': ['start']
+# }
 
 raw_petitions = []
 
@@ -77,7 +86,7 @@ def writeToFile(time_horizon, grid_size, secs, cs, evs, passengers, petitions, e
     outstream.write(str(len(evs))+"\n")
     for ev in evs:
         ev_str = str(ev.ev_id)+" "+str(ev.sec_id)+" "+\
-                 str(ev.release_time)+" "+str(ev.battery_capacity)+" "+\
+                 str(-1)+" "+str(ev.battery_capacity)+" "+\
                  str(ev.num_passengers)+"\n"+str(0)+"\n"
         outstream.write(ev_str)
 

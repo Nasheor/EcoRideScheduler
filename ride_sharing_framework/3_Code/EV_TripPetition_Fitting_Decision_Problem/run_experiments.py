@@ -32,48 +32,46 @@ import shutil
 # FUNCTION 01 - my_main
 # ------------------------------------------
 def my_main(input_folder, output_folder):
-    # # 1. If the output folder already exists, we remove it and re-create it
-    # if os.path.exists(output_folder):
-    #     shutil.rmtree(output_folder)
-    # os.mkdir(output_folder)
-    #
-    # 2. We open a file called solution.csv for writing
-        solution_csv_stream = codecs.open(output_folder + "solution.csv", "w", encoding="utf-8")
-    #
-    # # 3. We collect all the configurations to be analysed
-    # list_of_folders = os.listdir(input_folder)
-    # if (".DS_Store") in list_of_folders:
-    #     list_of_folders.remove(".DS_Store")
-    # list_of_folders.sort()
-    #
-    # # 4. We run the set of instances for each configuration
-    # for folder in list_of_folders:
-    #     # 4.1. We create the output folder to create the instances
-    #     os.mkdir(output_folder + folder)
-    #
-    #     # 4.2. We collect the list of instances to be solved (in sorted order) under the desired configuration
-    #     list_of_files = os.listdir(input_folder + folder)
-    #     if (".DS_Store") in list_of_files:
-    #         list_of_files.remove(".DS_Store")
-    #     list_of_files.sort()
+    # 1. If the output folder already exists, we remove it and re-create it
+    if os.path.exists(output_folder):
+        shutil.rmtree(output_folder)
+    os.mkdir(output_folder)
 
-        # # 4.3. We traverse the instances
-        # for file in list_of_files:
-            # 4.3.1. We get the name of the input and output files
-        list_of_files = os.listdir(input_folder)
+    # 2. We open a file called solution.csv for writing
+    solution_csv_stream = codecs.open(output_folder + "solution.csv", "w", encoding="utf-8")
+
+    # 3. We collect all the configurations to be analysed
+    list_of_folders = os.listdir(input_folder)
+    if (".DS_Store") in list_of_folders:
+        list_of_folders.remove(".DS_Store")
+    list_of_folders.sort()
+
+    # 4. We run the set of instances for each configuration
+    for folder in list_of_folders:
+        # 4.1. We create the output folder to create the instances
+        os.mkdir(output_folder + folder)
+
+        # 4.2. We collect the list of instances to be solved (in sorted order) under the desired configuration
+        list_of_files = os.listdir(input_folder + folder)
+        if (".DS_Store") in list_of_files:
+            list_of_files.remove(".DS_Store")
+        list_of_files.sort()
+
+        # 4.3. We traverse the instances
         for file in list_of_files:
-            input_file_name = input_folder + "/" + file
-            output_file_name = output_folder + file
+            # 4.3.1. We get the name of the input and output files
+            input_file_name = input_folder + folder + "/" + file
+            output_file_name = output_folder + folder + "/" + file
 
             # 4.3.2. We solve the instance
-            trips_weight, unallocated_trips, num_trips = run_instance.my_main(input_file_name, output_file_name)
-            num_trips_satisfied = num_trips - len(unallocated_trips)
+            num_trips_satisfied, num_trips_weight = run_instance.my_main(input_file_name, output_file_name)
+
             # 4.3.3. We write the result to the solution file
-            my_str = input_file_name + ";" + str(num_trips_satisfied) + "\n"
+            my_str = input_file_name + ";" + str(num_trips_satisfied) + str(num_trips_weight) + "\n"
             solution_csv_stream.write(my_str)
 
-        # 5. close the solution.csv file
-        solution_csv_stream.close()
+    # 5. close the solution.csv file
+    solution_csv_stream.close()
 
 
 # --------------------------------------------------------
@@ -92,8 +90,8 @@ def my_main(input_folder, output_folder):
 # --------------------------------------------------------
 if __name__ == '__main__':
     # 1. We get the name of the input and output folder
-    input_folder = "../../2_Instances/NYC/"
-    output_folder = "../../4_Solutions/NYC/"
+    input_folder = "../../2_Instances/test_instances/"
+    output_folder = "../../4_Solutions/test_instances/"
 
     if (len(sys.argv) > 1):
         input_folder = sys.argv[1]
