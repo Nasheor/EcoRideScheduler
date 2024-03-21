@@ -22,36 +22,20 @@
 import solve_TP_2_EV_allocation
 
 def find_nearest_charging_station(ev_location, CSs):
-    """
-    Finds the nearest charging station to the given EV location.
-
-    Parameters:
-    - ev_location: The location of the EV.
-    - CSs: A dictionary containing information about Charging Stations.
-
-    Returns:
-    - The ID of the nearest charging station.
-    """
-    # 1. We create the output variable
-    nearest_CS_id = None
+    nearest_cs = None
     min_distance = float('inf')
-    # 2. We traverse the CSs
-    for cs_id in CSs.keys():
-        # 2.1. We get the location of the CS
-        (cs_x_location, cs_y_location, cs_energy_produced) = CSs[cs_id]
-        # 2.2. We compute the distance to the CS
-        distance =compute_manhattan_distance(ev_location, (cs_x_location, cs_y_location))
-        # 2.3. If the distance is smaller, we update the nearest CS
+    for cs_id, cs_info in CSs.items():
+        cs_location = (cs_info[2], cs_info[3])  # Assuming CSs[cs_id] = (cs_id, sec_id, cs_x, cs_y, ...)
+        distance = compute_manhattan_distance(ev_location, cs_location)
         if distance < min_distance:
             min_distance = distance
-            nearest_CS_id = cs_id
-    # 3. We return the nearest CS
-    return nearest_CS_id, min_distance
+            nearest_cs = cs_id
+    return nearest_cs, min_distance
 
-def compute_manhattan_distance(location_1, location_2):
-    return abs(location_1[0] - location_2[0]) + abs(location_1[1] - location_2[1])
+def compute_manhattan_distance(point1, point2):
+    return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1])
 
-def can_ev_charge_at_cs(time_at_cs, charging_duration, station_occupancy, capacity):
+def can_charge_at_station(time_at_cs, charging_duration, station_occupancy, capacity):
     # Ensure that the CS is available to for the entire Charging duration
     for time_slot in range(time_at_cs, time_at_cs + charging_duration):
         if station_occupancy[time_slot] >= capacity:
@@ -119,6 +103,15 @@ def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_o
                     total_waiting_time = waiting_time + waiting_time_other_vehicles
                     time_lost = distance_to_cs + charging_duration + total_waiting_time
 
+                    # Calculate the potential impact on other vehicles' trip allocations
+                    potential_trip_impact = 0
+                    for other_ev_id, other_ev_schedule in EVs.items():
+                        if other_ev_id != ev_id:
+                            for tp_id, tp_info in TPs.items():
+                                tp_start_time = tp_info[0][6]
+                                tp_late_finish = tp_info[0][8]
+                                if tp_start_time >= time_at_cs and tp_late_finish <= time_at_cs + charging_duration:
+                                    potential_trip_impact += tp_info[0][9]
 
                     # Calculate overridden TPs
                     overridden_tps_count = 0
@@ -135,12 +128,13 @@ def evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_o
 
                     # Calculate the total value considering all factors
                     total_value = (w1 * distance_to_cs) + (w2 * waiting_time) + (w3 * overridden_tps_count) + \
-                                  (w4 * simulation_early_factor)
+                                  (w4 * simulation_early_factor) +  (w5 * potential_trip_impact)
                     if total_value > best_value:
                         best_value = total_value
                         charging_impact[ev_id][(point, cs_id)] =(cs_id, distance_to_cs, waiting_time, charging_duration,
                                                                 unallocated_tps )
     return charging_impact
+
 
 def unpack_charging_movements(EVs, CSs, charging_impact, SECs, simulation_time):
     # Movement type labels as integers
@@ -260,6 +254,7 @@ def try_to_allocate_EV(tp_id, ev_id, SECs, EVs, TPs):
                                                              sec_y_location
                                                              )
     return res
+
 # ------------------------------------------
 # FUNCTION 01 - reactive_simulation
 # ------------------------------------------
@@ -269,19 +264,6 @@ def solve_reactive_simulation(city,
                               EVs,
                               TPs
                              ):
-    """
-    Solves the reactive simulation, attempting to allocate trip petitions (TPs) to electric vehicles (EVs),
-    considering the locations of static energy chargers (SECs) and charging stations (CSs).
-
-    Parameters:
-    - SECs: A dictionary containing information about Static Energy Chargers.
-    - EVs: A dictionary containing information about Electric Vehicles.
-    - TPs: A dictionary containing information about Trip Petitions.
-    - CSs: A dictionary containing information about Charging Stations.
-
-    Returns:
-    - The number of TPs successfully allocated to EVs.
-    """
 
     res, res_weight = 0, 0
     sorted_TPs = sorted(TPs.items(), key=lambda tp: (-tp[1][0][9], tp[1][1]))
@@ -339,5 +321,24 @@ def solve_reactive_simulation(city,
             break
 
 
-    # 4. We return the result
-    return res, res_weight
+    # Identify potential charging points
+    potential_charging_points = identify_potential_charging_points(EVs, CSs)
+
+    # Evaluate charging impact
+    charging_impact = evaluate_charging_impact(TPs, EVs, CSs, potential_charging_points, station_occupancy, simulation_time)
+
+    # Decide on charging and update EV schedules
+    EVs = unpack_charging_movements(EVs, CSs, charging_impact, SECs, simulation_time)
+
+    # Reallocate trips post-charging
+    times = 5
+    for i in range(times):
+        additional_weight, EVs = reallocate_trips_post_charging(EVs, TPs, SECs, unallocated_tps, simulation_time)
+
+    # Update the simulation result
+    res += additional_weight
+
+
+    # 4. We return res
+    return res, unallocated_tps
+
