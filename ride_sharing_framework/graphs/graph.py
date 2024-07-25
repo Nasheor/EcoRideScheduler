@@ -46,13 +46,13 @@ def overriden_tp_count():
     plt.bar(range(num_ev), overridden_trips, color='orange', edgecolor='black')
     plt.title('Overridden Trip Count due to Charging Events')
     plt.xlabel('EV Index')
-    plt.ylabel('Overridden Trip Count')
+    plt.ylabel('Overridden Trip Counts')
     plt.grid(axis='y')
     plt.show()
 
 
 'Analyze the timing of charging events relative to the simulation timeline. Discuss trends such as peak charging periods' \
-' and variations in charging activity throughout the simulation. Assess the impact of charging timing on system resource ' \
+'and variations in charging activity throughout the simulation. Assess the impact of charging timing on system resource ' \
 'utilization and scheduling flexibility.'
 def timing_of_charging_sim():
     # Generate dummy data
@@ -71,7 +71,7 @@ def timing_of_charging_sim():
 'Examine how charging decisions affect the availability and utilization of charging stations for neighboring EVs. ' \
 'Discuss patterns of resource sharing and congestion at charging stations. Evaluate strategies to optimize charging ' \
 'resource allocation and mitigate potential conflicts among EVs.'
-def  impact_on_other_ev():
+def impact_on_other_ev():
     # Generate dummy data
     num_ev = 1000
     num_time_slots = 1440  # Assuming a simulation period of 24 hours with 1-minute time slots
